@@ -27,7 +27,13 @@ namespace Barotrauma
 
         public delegate bool OnEnterHandler(GUITextBox textBox, string text);
         public OnEnterHandler OnEnterPressed;
-        
+
+        public delegate bool OnUpHandler(GUITextBox textBox);
+        public OnUpHandler OnUpPressed;
+
+        public delegate bool OnDownHandler(GUITextBox textBox);
+        public OnDownHandler OnDownPressed;
+
         public event TextBoxEvent OnKeyHit;
 
         public delegate bool OnTextChangedHandler(GUITextBox textBox, string text);
@@ -470,6 +476,14 @@ namespace Barotrauma
                 if (OnEnterPressed != null &&  PlayerInput.KeyHit(Keys.Enter))
                 {
                     OnEnterPressed(this, Text);
+                }
+                if (OnUpPressed != null && PlayerInput.KeyHit(Keys.Up))
+                {
+                    OnUpPressed(this);
+                }
+                if (OnDownPressed != null && PlayerInput.KeyHit(Keys.Down))
+                {
+                    OnDownPressed(this);
                 }
             }
             else if (Selected)

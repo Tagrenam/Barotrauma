@@ -22,6 +22,50 @@ namespace Barotrauma.Items.Components
         private GUITextBlock fillerBlock;
         private GUITextBox inputBox;
         private bool shouldSelectInputBox;
+        System.Collections.Generic.List<string> localhistory = null;
+        private int historyCount = 1;
+
+        private bool checkInRange(int index)
+        {
+            return (index >= 0 && index < messageHistory.Count);
+        }
+
+        private bool checkIsNotEmpty(string str)
+        {
+            return !(str.IsNullOrEmpty() || str.IsNullOrWhiteSpace());
+        }
+
+        private string getPrevOne()
+        {
+            if (checkInRange(historyCount + 1))
+            {
+                historyCount++;
+                return localhistory.ElementAt(historyCount);
+            }
+            return localhistory.ElementAt(historyCount);
+        }
+
+        private string getNextOne()
+        {
+            if (checkInRange(historyCount - 1))
+            {
+                historyCount--;
+                return localhistory.ElementAt(historyCount);
+            }
+            return localhistory.ElementAt(historyCount);
+        }
+
+        private System.Collections.Generic.List<string> createHistory()
+        {
+            System.Collections.Generic.List<string> list = new System.Collections.Generic.List<string>();
+            if (messageHistory.Count > 0)
+                foreach (var v in messageHistory)
+                {
+                    if (checkIsNotEmpty(v.Text))
+                        list.Add(v.Text);
+                }
+            return list;
+        }
 
         partial void InitProjSpecific(XElement element)
         {
@@ -60,6 +104,20 @@ namespace Barotrauma.Items.Components
                             item.CreateClientEvent(this, new ClientEventData(text));
                         }
                         textBox.Text = string.Empty;
+                        localhistory = createHistory();
+                        historyCount = localhistory.Count;
+                        return true;
+                    },
+                    OnUpPressed = (GUITextBox textBox) =>
+                    {
+                        if (localhistory != null && localhistory.Count > 0)
+                            textBox.Text = getNextOne();
+                        return true;
+                    },
+                    OnDownPressed = (GUITextBox textBox) =>
+                    {
+                        if (localhistory != null && localhistory.Count > 0)
+                            textBox.Text = getPrevOne();
                         return true;
                     }
                 };
