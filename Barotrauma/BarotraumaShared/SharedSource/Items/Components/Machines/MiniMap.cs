@@ -1,7 +1,10 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Xml.Linq;
+using System.Globalization;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Barotrauma.Items.Components
 {

@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.Xna.Framework.Input;
+using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace Barotrauma.Items.Components
 {
@@ -1773,60 +1775,60 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(Signal signal, Connection connection)
         {
-            Item source = signal.source;
-            if (source == null || source.CurrentHull == null) { return; }
-
-            Hull sourceHull = source.CurrentHull;
-            if (!hullDatas.TryGetValue(sourceHull, out HullData? hullData))
-            {
-                hullData = new HullData();
-                hullDatas.Add(sourceHull, hullData);
-            }
-
-            if (hullData.Distort) { return; }
-
             switch (connection.Name)
             {
                 case "water_data_in":
-                    //cheating a bit because water detectors don't actually send the water level
-                    bool fromWaterDetector = source.GetComponent<WaterDetector>() != null;
-                    hullData.ReceivedWaterAmount = null;
-                    hullData.LastWaterDataTime = Timing.TotalTime;
-                    if (fromWaterDetector)
+                    try
                     {
-                        hullData.ReceivedWaterAmount = WaterDetector.GetWaterPercentage(sourceHull);
+                        float value;
+                        Dictionary<string, float> dict = Regex
+                        .Matches(signal.value, @"(?<match>\""[\,\s\t\w\d_\.\-]+\"":[\s\t\,]*([\w\d_\.\-]+|\""[\,\s\t\w\d_\.\-]+\""))")
+                        .Cast<Match>()
+                        .Select(m => m.Groups["match"].Value)
+                        .Select(x => x.Split(':'))
+                        .ToDictionary(x => x[0].Replace("\"", string.Empty), x => float.TryParse(x[1].Replace("\"", string.Empty), NumberStyles.Float, CultureInfo.InvariantCulture, out value) ? value / 100 : 0);
+
+                        foreach (var hullData in hullDatas)
+                        {
+                            float outValue;
+                            if (dict.TryGetValue(hullData.Key.DisplayName.ToString(), out outValue))
+                                hullData.Value.ReceivedWaterAmount = outValue;
+                            else
+                                hullData.Value.ReceivedWaterAmount = null;
+                        }
+
                     }
-                    foreach (var linked in sourceHull.linkedTo)
+                    catch
                     {
-                        if (linked is not Hull linkedHull) { continue; }
-                        if (!hullDatas.TryGetValue(linkedHull, out HullData? linkedHullData))
-                        {
-                            linkedHullData = new HullData();
-                            hullDatas.Add(linkedHull, linkedHullData);
-                        }
-                        linkedHullData.ReceivedWaterAmount = null;
-                        if (fromWaterDetector)
-                        {
-                            linkedHullData.ReceivedWaterAmount = WaterDetector.GetWaterPercentage(linkedHull);
-                        }
+                        DebugConsole.NewMessage("Exception", Color.Red);
+                        break;
                     }
                     break;
                 case "oxygen_data_in":
-                    if (!float.TryParse(signal.value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float oxy))
+                    try
                     {
-                        oxy = Rand.Range(0.0f, 100.0f);
-                    }
-                    hullData.ReceivedOxygenAmount = oxy;
-                    hullData.LastOxygenDataTime = Timing.TotalTime;
-                    foreach (var linked in sourceHull.linkedTo)
-                    {
-                        if (linked is not Hull linkedHull) { continue; }
-                        if (!hullDatas.TryGetValue(linkedHull, out HullData? linkedHullData))
+                        float value;
+                        Dictionary<string, float> dict = Regex
+                        .Matches(signal.value, @"(?<match>\""[\,\s\t\w\d_\.\-]+\"":[\s\t\,]*([\w\d_\.\-]+|\""[\,\s\t\w\d_\.\-]+\""))")
+                        .Cast<Match>()
+                        .Select(m => m.Groups["match"].Value)
+                        .Select(x => x.Split(':'))
+                        .ToDictionary(x => x[0].Replace("\"", string.Empty), x => float.TryParse(x[1].Replace("\"", string.Empty), NumberStyles.Float, CultureInfo.InvariantCulture, out value) ? value : 0);
+
+                        foreach (var hullData in hullDatas)
                         {
-                            linkedHullData = new HullData();
-                            hullDatas.Add(linkedHull, linkedHullData);
+                            float outValue;
+                            if (dict.TryGetValue(hullData.Key.DisplayName.ToString(), out outValue))
+                                hullData.Value.ReceivedOxygenAmount = outValue;
+                            else
+                                hullData.Value.ReceivedOxygenAmount = null;
                         }
-                        linkedHullData.ReceivedOxygenAmount = oxy;
+
+                    }
+                    catch
+                    {
+                        DebugConsole.NewMessage("Exception", Color.Red);
+                        break;
                     }
                     break;
             }

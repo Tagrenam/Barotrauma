@@ -382,5 +382,14 @@ namespace Barotrauma.Items.Components
 
             parentElement.Add(newElement);
         }
+
+        public bool IsConnected()
+        {
+            for (int i = 0; i < MaxWires; i++)
+            {
+                if (wires.ElementAt<Wire>(i) != null) return true;
+            }
+            return false;
+        }
     }
 }

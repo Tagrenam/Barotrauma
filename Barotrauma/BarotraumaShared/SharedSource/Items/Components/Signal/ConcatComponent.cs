@@ -1,5 +1,6 @@
 ﻿using System.Xml.Linq;
 using System;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Items.Components
 {
@@ -18,7 +19,14 @@ namespace Barotrauma.Items.Components
         }
 
         [InGameEditable, Serialize("", IsPropertySaveable.No)]
-        public string Separator
+        public string Separator_1_2
+        {
+            get;
+            set;
+        }
+
+        [InGameEditable, Serialize("", IsPropertySaveable.No)]
+        public string Separator_2_3
         {
             get;
             set;
@@ -29,17 +37,25 @@ namespace Barotrauma.Items.Components
         {
         }
 
-        protected override string Calculate(string signal1, string signal2)
+        protected override string Calculate(string signal1, string signal2, string signal3)
         {
-            string output;
-            if (string.IsNullOrEmpty(Separator))
-            {
-                output = signal1 + signal2;
-            }
-            else
-            {
-                output = signal1 + Separator + signal2;
-            }
+            string output = "";
+
+            if (string.IsNullOrEmpty(signal1) == false)
+                output += signal1;
+
+            if (string.IsNullOrEmpty(Separator_1_2) == false)
+                output += Separator_1_2;
+
+            if (string.IsNullOrEmpty(signal2) == false)
+                output += signal2;
+
+            if (string.IsNullOrEmpty(Separator_2_3) == false)
+                output += Separator_2_3;
+
+            if (string.IsNullOrEmpty(signal3) == false)
+                output += signal3;
+
             return output.Length <= maxOutputLength ? output : output.Substring(0, MaxOutputLength);
         }
     }
